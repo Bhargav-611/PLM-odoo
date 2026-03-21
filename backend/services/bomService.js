@@ -81,3 +81,7 @@ exports.deleteBOM = async (bomId, user) => {
     await BOMVersion.deleteMany({ bomId });
     return await BOM.findByIdAndDelete(bomId);
 };
+
+exports.getBOMVersions = async (bomId) => {
+    return await BOMVersion.find({ bomId }).sort({ versionNumber: -1 });
+};
