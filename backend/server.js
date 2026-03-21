@@ -4,7 +4,8 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 
 const authRoutes = require('./routes/authRoutes');
-const productRoutes = require('./routes/productRoutes');
+// Product routes integrated by Ghanshyam
+const productRoutes = require('./routes/product.routes');
 const ecoRoutes = require('./routes/ecoRoutes');
 
 const app = express();
