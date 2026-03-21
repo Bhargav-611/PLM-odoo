@@ -1,7 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 exports.signup = async (req, res) => {
@@ -75,7 +74,7 @@ exports.forgotPassword = async (req, res) => {
         // Generate 6 digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Save OTP and expiration (10 mins)
+        // Save OTP and expiration(10 mins)
         user.resetOtp = otp;
         user.resetOtpExpires = Date.now() + 10 * 60 * 1000;
         await user.save();

@@ -2,16 +2,21 @@ const mongoose = require('mongoose');
 
 const ECOSchema = new mongoose.Schema({
     title: { type: String, required: true },
-    type: { type: String, required: true },
-    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-    changes: { type: Object, required: true }, // Stores only changed fields
+    changeDescription: { type: String }, // Required via user prompt
+    ecoType: { type: String, enum: ['PRODUCT', 'BOM'], required: true },
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    bomId: { type: mongoose.Schema.Types.ObjectId, ref: 'BOM' }, // Optional future scaling
     stage: {
         type: String,
-        enum: ['DRAFT', 'IN_REVIEW', 'APPROVED', 'REJECTED'],
-        default: 'DRAFT'
+        enum: ['NEW_REQUEST', 'REQUEST_APPROVED', 'IN_CHANGE', 'FINAL_APPROVAL', 'DONE', 'APPLIED'],
+        default: 'NEW_REQUEST'
     },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    changesDraft: { type: mongoose.Schema.Types.Mixed, default: {} }, // Temporary sandbox edits
+    changesFinal: { type: mongoose.Schema.Types.Mixed, default: {} }, // Sealed for approval
+    compareData: { type: mongoose.Schema.Types.Mixed }, // Cached diff block
+    applied: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('ECO', ECOSchema);

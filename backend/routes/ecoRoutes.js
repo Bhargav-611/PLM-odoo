@@ -2,11 +2,15 @@ const express = require('express');
 const router = express.Router();
 const ecoController = require('../controllers/ecoController');
 const { protect } = require('../middleware/authMiddleware');
-const { checkRole } = require('../middleware/roleMiddleware');
 
-router.post('/', protect, checkRole('ENGINEER', 'ADMIN'), ecoController.createECO);
-router.put('/:id/changes', protect, checkRole('ENGINEER', 'ADMIN'), ecoController.updateChanges);
-router.put('/:id/start', protect, checkRole('ENGINEER', 'ADMIN'), ecoController.startReview);
-router.put('/:id/approve', protect, checkRole('APPROVER', 'ADMIN'), ecoController.approveECO);
+router.post('/create', protect, ecoController.createECO);
+router.put('/:id/approve-request', protect, ecoController.approveRequest);
+router.put('/:id/edit', protect, ecoController.editECO);
+router.put('/:id/send-final', protect, ecoController.sendFinalApproval);
+router.get('/:id/compare', protect, ecoController.compareECO);
+router.put('/:id/final-approve', protect, ecoController.finalApprove);
+router.put('/:id/apply', protect, ecoController.applyECO);
+
+router.get('/', protect, ecoController.getAllECO);
 
 module.exports = router;
