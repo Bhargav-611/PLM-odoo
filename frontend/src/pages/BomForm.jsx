@@ -112,7 +112,7 @@ const BomForm = () => {
                     </div>
                     {formData.operations.map((o, i) => (
                         <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                            <input type="text" value={o.workCenter} onChange={updateOperation.bind(null, i, 'workCenter')} placeholder="Work Center" style={{ flex: 2, padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} required />
+                            <input type="text" value={o.workCenter} onChange={(e) => updateOperation(i, 'workCenter', e.target.value)} placeholder="Work Center" style={{ flex: 2, padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} required />
                             <input type="number" min="1" value={o.time} onChange={e => updateOperation(i, 'time', Number(e.target.value))} placeholder="Expectation Time (min)" style={{ flex: 1, padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }} required />
                             <button type="button" onClick={() => removeOperation(i)} style={{ padding: '8px 12px', background: '#fee2e2', color: '#991b1b', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
                         </div>

@@ -34,6 +34,15 @@ const EcoEdit = () => {
         } catch (err) { alert(err.response?.data?.message || 'Error updating draft'); }
     };
 
+    const handleLock = async (e) => {
+        e.preventDefault();
+        try {
+            await API.put(`/eco/${id}/edit`, { changesDraft });
+            await API.post(`/eco/${id}/submit`);
+            navigate('/eco');
+        } catch (err) { alert(err.response?.data?.message || 'Error executing request lock sequence'); }
+    };
+
     if (!eco || !changesDraft) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Loading Active Sandbox Editor...</div>;
 
     // Component Handlers
@@ -112,7 +121,10 @@ const EcoEdit = () => {
                     </>
                 )}
 
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '15px' }}>Store Draft Sandbox Logic into Document</button>
+                <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
+                    <button type="submit" className="btn" style={{ flex: 1, padding: '12px', fontSize: '15px', background: '#e5e7eb', color: '#111827', fontWeight: 'bold' }}>Save Draft Changes</button>
+                    <button type="button" onClick={handleLock} className="btn btn-primary" style={{ flex: 1, padding: '12px', fontSize: '15px', fontWeight: 'bold' }}>Save & Lock Submission</button>
+                </div>
             </form>
         </div>
     );

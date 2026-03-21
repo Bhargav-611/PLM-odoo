@@ -9,7 +9,8 @@ exports.createProduct = async (data, files, userId) => {
     try {
         const product = await Product.create({
             name: data.name,
-            isActive: true
+            isActive: true,
+            createdBy: userId
         });
 
         const image = files?.image?.[0]?.location || null;
@@ -40,8 +41,9 @@ exports.createProduct = async (data, files, userId) => {
     }
 };
 
-exports.getAllProducts = async () => {
-    return await Product.find({ isActive: true }).populate('currentVersionId').exec();
+exports.getAllProducts = async (user) => {
+    const filter = user?.role === 'ADMIN' ? {} : { isActive: true };
+    return await Product.find(filter).populate('currentVersionId').exec();
 };
 
 exports.getProductById = async (id) => {

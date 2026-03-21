@@ -90,9 +90,11 @@ const ProductList = () => {
                                     </td>
                                     <td onClick={e => e.stopPropagation()}>
                                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                            <Link to={`/products/${p._id}/history`} style={{ color: '#0052cc', fontWeight: '500', textDecoration: 'none', fontSize: '13px' }}>
-                                                History
-                                            </Link>
+                                            {role !== 'OPERATOR' && (
+                                                <Link to={`/products/${p._id}/history`} style={{ color: '#0052cc', fontWeight: '500', textDecoration: 'none', fontSize: '13px' }}>
+                                                    History
+                                                </Link>
+                                            )}
                                             {['ENGINEER', 'ADMIN'].includes(role) && (
                                                 <Link to={`/eco?search=${p.name}`} className="btn" style={{ background: '#e0e7ff', color: '#4338ca', padding: '5px 10px', fontSize: '12px' }}>
                                                     Changes
@@ -147,7 +149,9 @@ const ProductList = () => {
                         </div>
 
                         <div style={{ marginTop: '24px', display: 'flex', gap: '10px' }}>
-                            <Link to={`/products/${selectedProduct._id}/history`} className="btn btn-primary" style={{ flex: 1 }}>Full Version History</Link>
+                            {role !== 'OPERATOR' && (
+                                <Link to={`/products/${selectedProduct._id}/history`} className="btn btn-primary" style={{ flex: 1 }}>Full Version History</Link>
+                            )}
                             <button onClick={() => setSelectedProduct(null)} className="btn" style={{ flex: 1, background: '#f3f4f6' }}>Close</button>
                         </div>
                     </div>
