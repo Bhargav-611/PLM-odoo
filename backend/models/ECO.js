@@ -13,6 +13,8 @@ const ECOSchema = new mongoose.Schema({
     },
     requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    effectiveDate: { type: Date },
+    versionUpdate: { type: Boolean, default: false },
     changesDraft: { type: mongoose.Schema.Types.Mixed, default: {} }, // Temporary sandbox edits
     changesFinal: { type: mongoose.Schema.Types.Mixed, default: {} }, // Sealed for approval
     compareData: { type: mongoose.Schema.Types.Mixed }, // Cached diff block
