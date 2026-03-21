@@ -44,7 +44,7 @@ const Navigation = () => {
                     <>
                         <Link to="/products" style={{ color: '#4b5563', textDecoration: 'none' }}>Directory</Link>
                         <Link to="/boms" style={{ color: '#4b5563', textDecoration: 'none' }}>Bills of Materials</Link>
-                        <Link to="/eco" style={{ color: '#4b5563', textDecoration: 'none' }}>ECO Workflow</Link>
+                        <Link to="/eco" style={{ color: '#4b5563', textDecoration: 'none' }}>ECO</Link>
                         {['ADMIN', 'APPROVER', 'ENGINEER', 'OPERATOR'].includes(role) && <Link to="/report" style={{ color: '#4b5563', textDecoration: 'none' }}>Audits</Link>}
                         <span style={{ background: '#f3f4f6', padding: '4px 10px', borderRadius: '16px', fontSize: '12px', color: '#374151', fontWeight: 'bold' }}>{role}</span>
                         <button onClick={handleLogout} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}>Logout</button>
