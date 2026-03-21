@@ -6,7 +6,7 @@ exports.createBOM = async (data, userId) => {
     const existing = await BOM.findOne({ productId: data.productId });
     if (existing) throw new Error("A Bill of Materials already exists for this Product natively.");
 
-    const bom = new BOM({ productId: data.productId, isActive: true });
+    const bom = new BOM({ productId: data.productId, isActive: true, createdBy: userId });
     await bom.save();
 
     const components = (data.components || []).map(c => ({
@@ -67,8 +67,9 @@ exports.createNewVersion = async (bomId, changes, comment, userId) => {
     return newVersion;
 };
 
-exports.getActiveBOMs = async () => {
-    return await BOM.find({ isActive: true })
+exports.getActiveBOMs = async (user) => {
+    const filter = user?.role === 'ADMIN' ? {} : { isActive: true };
+    return await BOM.find(filter)
         .populate('productId', 'name')
         .populate({
             path: 'currentVersionId'
@@ -80,4 +81,8 @@ exports.deleteBOM = async (bomId, user) => {
     if (user.role !== 'ADMIN') throw new Error('Not Authorized');
     await BOMVersion.deleteMany({ bomId });
     return await BOM.findByIdAndDelete(bomId);
+};
+
+exports.getBOMVersions = async (bomId) => {
+    return await BOMVersion.find({ bomId }).sort({ versionNumber: -1 });
 };

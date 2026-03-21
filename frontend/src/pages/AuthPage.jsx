@@ -17,7 +17,9 @@ const AuthPage = () => {
         name: '',
         email: '',
         password: '',
-        role: 'ENGINEER'
+        role: 'ENGINEER',
+        speciality: '',
+        otherSpeciality: ''
     });
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -43,7 +45,11 @@ const AuthPage = () => {
                 navigate('/products'); // Redirect natively upon success
             } else {
                 // Signup
-                const res = await axios.post('http://localhost:5000/api/auth/signup', formData);
+                const payload = { ...formData };
+                if (payload.role === 'APPROVER' && payload.speciality === 'Other') {
+                    payload.speciality = payload.otherSpeciality;
+                }
+                const res = await axios.post('http://localhost:5000/api/auth/signup', payload);
                 setMessage('Signup Successful! You can now login.');
                 setIsLogin(true); // Switch to login view after successful signup
             }
@@ -100,15 +106,45 @@ const AuthPage = () => {
                     </div>
 
                     {!isLogin && (
-                        <div className="form-group">
-                            <label>System Role</label>
-                            <select name="role" value={formData.role} onChange={handleChange}>
-                                <option value="ENGINEER">ENGINEER</option>
-                                <option value="APPROVER">APPROVER</option>
-                                <option value="OPERATOR">OPERATOR</option>
-                                <option value="ADMIN">ADMIN</option>
-                            </select>
-                        </div>
+                        <>
+                            <div className="form-group">
+                                <label>System Role</label>
+                                <select name="role" value={formData.role} onChange={handleChange}>
+                                    <option value="ENGINEER">ENGINEER</option>
+                                    <option value="APPROVER">APPROVER</option>
+                                    <option value="OPERATOR">OPERATOR</option>
+                                    <option value="ADMIN">ADMIN</option>
+                                </select>
+                            </div>
+
+                            {formData.role === 'APPROVER' && (
+                                <div className="form-group" style={{ marginTop: '15px' }}>
+                                    <label>Approver Domain Speciality</label>
+                                    <select name="speciality" value={formData.speciality} onChange={handleChange} required>
+                                        <option value="">-- Select Speciality --</option>
+                                        <option value="Software Expert">Software Expert</option>
+                                        <option value="Hardware">Hardware</option>
+                                        <option value="Mechanical">Mechanical</option>
+                                        <option value="Electrical">Electrical</option>
+                                        <option value="Other">Other (Specify Below)</option>
+                                    </select>
+                                </div>
+                            )}
+
+                            {formData.role === 'APPROVER' && formData.speciality === 'Other' && (
+                                <div className="form-group" style={{ marginTop: '15px' }}>
+                                    <label>Custom Domain Input</label>
+                                    <input
+                                        type="text"
+                                        name="otherSpeciality"
+                                        placeholder="e.g., Materials Science"
+                                        value={formData.otherSpeciality}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {isLogin && (

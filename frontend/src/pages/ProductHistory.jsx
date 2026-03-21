@@ -7,6 +7,12 @@ const ProductHistory = () => {
     const [history, setHistory] = useState([]);
 
     useEffect(() => {
+        const role = localStorage.getItem('role');
+        if (role === 'OPERATOR') {
+            window.location.href = '/products';
+            return;
+        }
+
         const fetchHistory = async () => {
             try {
                 const res = await API.get(`/products/${id}/history`);

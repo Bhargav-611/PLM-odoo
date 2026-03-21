@@ -1,30 +1,166 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import API from '../api/api';
 
 const EcoCompare = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [compareData, setCompareData] = useState(null);
     const [showChangedOnly, setShowChangedOnly] = useState(false);
-    const [showFull, setShowFull] = useState(false);
     const [error, setError] = useState('');
+    const [myUserId, setMyUserId] = useState(null);
+    const role = localStorage.getItem('role');
 
     useEffect(() => {
+        // Decode JWT to find our own userId to detect if it's our turn
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                setMyUserId(payload.user.id);
+            } catch (e) { console.error('Token parse err', e); }
+        }
+
+        fetchCompare();
+    }, [id]);
+
+    const fetchCompare = () => {
         API.get(`/eco/${id}/compare`)
             .then(res => setCompareData(res.data))
             .catch(err => setError(err.response?.data?.message || 'Comparison logic failed securely.'));
-    }, [id]);
+    };
+
+    const handleAction = async (actionStr) => {
+        try {
+            await API.post(`/eco/${id}/${actionStr}`);
+            fetchCompare(); // Refresh the timeline data
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error executing action');
+        }
+    };
 
     if (error) return <div style={{ textAlign: 'center', marginTop: '50px', color: 'red', fontWeight: 'bold' }}>{error}</div>;
     if (!compareData) return <div style={{ textAlign: 'center', marginTop: '50px' }}>Processing Matrix Intersections...</div>;
 
     const diffs = showChangedOnly ? compareData.diff.filter(d => d.changed) : compareData.diff;
+    const eco = compareData.eco;
+
+    // Check if it's currently our turn to approve
+    let isMyTurn = false;
+    if (eco.status === 'IN_PROGRESS' && eco.currentApproverIndex < eco.approvers.length) {
+        const currentA = eco.approvers[eco.currentApproverIndex];
+        if ((currentA.user._id || currentA.user) === myUserId) {
+            isMyTurn = true;
+        }
+    }
+
+    // Admins and Approvers in sequence can trigger reject logic when IN_PROGRESS
+    const canReject = eco.status === 'IN_PROGRESS' && (role === 'ADMIN' || eco.approvers.some(a => (a.user._id || a.user) === myUserId));
 
     return (
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
                 <Link to="/eco" style={{ color: '#0052cc', marginRight: '15px', textDecoration: 'none', fontWeight: '500' }}>&larr; Workflow</Link>
-                <h2 style={{ margin: 0, color: '#111827' }}>ECO Impact Analysis (Diff)</h2>
+                <h2 style={{ margin: 0, color: '#111827' }}>ECO Impact Analysis & Timeline</h2>
+            </div>
+
+            {/* Sequential Approval Timeline */}
+            <div className="card" style={{ marginBottom: '20px', padding: '0', overflow: 'hidden' }}>
+                <div style={{ background: '#f9fafb', padding: '15px 20px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h4 style={{ margin: 0 }}>Approval Sequence Timeline</h4>
+                    <span className={`badge ${eco.status === 'REJECTED' ? 'badge-archived' : 'badge-active'}`}>{eco.status}</span>
+                </div>
+
+                <div style={{ padding: '20px' }}>
+                    {(!eco.approvers || eco.approvers.length === 0) ? (
+                        <p style={{ color: '#6b7280', fontStyle: 'italic', margin: 0 }}>Admin has not assigned an approval sequence yet.</p>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {eco.approvers.map((appr, idx) => {
+                                const isCurrent = eco.currentApproverIndex === idx && eco.status === 'IN_PROGRESS';
+                                const isPassed = eco.currentApproverIndex > idx || eco.status === 'APPROVED';
+                                const isRejected = appr.status === 'REJECTED';
+
+                                let styleBadge = { background: '#f3f4f6', color: '#6b7280' }; // Wait
+                                let icon = '⏳';
+                                let statusText = 'Pending';
+
+                                if (isPassed || appr.status === 'APPROVED') {
+                                    styleBadge = { background: '#def7ec', color: '#046c4e' };
+                                    icon = '✅';
+                                    statusText = `Approved ${appr.approvedAt ? new Date(appr.approvedAt).toLocaleDateString() : ''}`;
+                                } else if (isRejected || (eco.status === 'REJECTED' && !isPassed)) {
+                                    styleBadge = { background: '#fde8e8', color: '#9b1c1c' };
+                                    icon = '❌';
+                                    statusText = isRejected ? `Rejected ${appr.rejectedAt ? new Date(appr.rejectedAt).toLocaleDateString() : ''}` : 'Cancelled';
+                                } else if (isCurrent) {
+                                    styleBadge = { background: '#e1effe', color: '#1e429f', border: '1px solid #c3ddfd' };
+                                    icon = '🔄';
+                                    statusText = 'Awaiting Action';
+                                }
+
+                                return (
+                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: styleBadge.background, color: styleBadge.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                            {idx + 1}
+                                        </div>
+                                        <div style={{ flex: 1, padding: '10px 15px', borderRadius: '6px', background: isCurrent ? '#fdf8f6' : '#fff', border: isCurrent ? '1px solid #fed7aa' : '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between' }}>
+                                            <div>
+                                                <strong>{appr.user?.name || 'Unknown User'}</strong> <span style={{ color: '#6b7280', fontSize: '13px' }}>({appr.user?.role})</span>
+                                            </div>
+                                            <div style={{ fontSize: '14px', ...styleBadge, padding: '2px 8px', borderRadius: '4px', border: styleBadge.border || 'none' }}>
+                                                {icon} {statusText}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Final Node */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: eco.status === 'APPROVED' ? '#046c4e' : '#f3f4f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                    ★
+                                </div>
+                                <div style={{ flex: 1, padding: '10px 15px', borderRadius: '6px', border: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <strong>Admin Final Execution</strong>
+                                    </div>
+                                    <div style={{ fontSize: '14px', color: eco.status === 'APPROVED' ? '#046c4e' : '#6b7280' }}>
+                                        {eco.status === 'APPROVED' ? `✅ Executed ${eco.effectiveDate ? new Date(eco.effectiveDate).toLocaleDateString() : ''}` : (eco.isReadyForFinalApproval && eco.status === 'IN_PROGRESS' ? 'Awaiting Action' : 'Locked')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {eco.rejectionReason && (
+                        <div style={{ marginTop: '20px', padding: '15px', background: '#fde8e8', borderLeft: '4px solid #f05252', borderRadius: '4px' }}>
+                            <h5 style={{ margin: '0 0 5px 0', color: '#9b1c1c' }}>Rejection Details</h5>
+                            <p style={{ margin: 0, color: '#771d1d', fontSize: '14px' }}><strong>Reason:</strong> {eco.rejectionReason}</p>
+                            <p style={{ margin: '5px 0 0 0', color: '#771d1d', fontSize: '13px' }}><strong>By:</strong> {eco.rejectedBy?.name || 'Unknown'}</p>
+                        </div>
+                    )}
+
+                    {/* Action Controls */}
+                    <div style={{ marginTop: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '15px', display: 'flex', gap: '10px' }}>
+                        {isMyTurn && (
+                            <button onClick={() => handleAction('approve')} className="btn btn-success" style={{ fontWeight: 'bold' }}>Approve Checkpoint</button>
+                        )}
+                        {canReject && (
+                            <button onClick={() => {
+                                const reason = prompt('Please enter rejection reason. This permanently cancels the ECO.');
+                                if (reason) {
+                                    API.post(`/eco/${eco._id}/reject`, { reason })
+                                        .then(() => fetchCompare())
+                                        .catch(err => alert(err.response?.data?.message || 'Error'));
+                                }
+                            }} className="btn btn-danger" style={{ fontWeight: 'bold' }}>Reject & Cancel</button>
+                        )}
+                        {role === 'ADMIN' && eco.status === 'IN_PROGRESS' && eco.isReadyForFinalApproval && (
+                            <button onClick={() => handleAction('apply')} className="btn btn-success" style={{ fontWeight: 'bold' }}>Confirm & Execute Protocol</button>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="card" style={{ marginBottom: '20px' }}>
@@ -33,9 +169,6 @@ const EcoCompare = () => {
                 <div style={{ display: 'flex', gap: '15px', marginTop: '20px', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: '500' }}>
                         <input type="checkbox" checked={showChangedOnly} onChange={() => setShowChangedOnly(!showChangedOnly)} /> Show Only Mutations
-                    </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: '500' }}>
-                        <input type="checkbox" checked={showFull} onChange={() => setShowFull(!showFull)} /> Mount Complete JSON Dump
                     </label>
                 </div>
             </div>
@@ -80,29 +213,42 @@ const EcoCompare = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {compareData.newDraft.components.map((nc, idx) => {
-                                const oldC = compareData.oldProduct?.components?.find(c => c.componentName === nc.componentName);
-                                const oldQty = oldC ? oldC.quantity : 0;
-                                const newQty = nc.quantity;
-                                const isAdded = newQty > oldQty;
-                                const isRemoved = newQty < oldQty;
-                                return (
-                                    <tr key={idx}>
-                                        <td style={{ fontWeight: '600' }}>{nc.componentName}</td>
-                                        <td>
-                                            {isAdded ? <span style={{ color: '#046c4e', fontWeight: 'bold' }}>{newQty} 🟢</span> : isRemoved ? <span style={{ color: '#9b1c1c', fontWeight: 'bold' }}>{newQty} 🔴</span> : <span>{newQty}</span>}
-                                        </td>
-                                        <td style={{ color: '#6b7280' }}>{oldQty}</td>
-                                    </tr>
-                                );
-                            })}
-                            {compareData.oldProduct?.components?.filter(oc => !compareData.newDraft.components.some(nc => nc.componentName === oc.componentName)).map((oc, idx) => (
-                                <tr key={`old-${idx}`}>
-                                    <td style={{ fontWeight: '600' }}>{oc.componentName}</td>
-                                    <td><span style={{ color: '#9b1c1c', fontWeight: 'bold' }}>0 🔴</span></td>
-                                    <td style={{ color: '#6b7280' }}>{oc.quantity}</td>
-                                </tr>
-                            ))}
+                            {(() => {
+                                let newComps = compareData.newDraft.components || [];
+                                let oldComps = compareData.oldProduct?.components || [];
+                                let rowsToRender = [];
+
+                                newComps.forEach(nc => {
+                                    const oldC = oldComps.find(c => c.componentName === nc.componentName);
+                                    const oldQty = oldC ? oldC.quantity : 0;
+                                    const newQty = nc.quantity;
+                                    const changed = oldQty !== newQty;
+                                    if (!showChangedOnly || changed) rowsToRender.push({ name: nc.componentName, oldQty, newQty });
+                                });
+
+                                oldComps.forEach(oc => {
+                                    const existsNew = newComps.some(nc => nc.componentName === oc.componentName);
+                                    if (!existsNew) {
+                                        rowsToRender.push({ name: oc.componentName, oldQty: oc.quantity, newQty: 0 });
+                                    }
+                                });
+
+                                return rowsToRender.length === 0 ?
+                                    <tr><td colSpan="3" style={{ textAlign: 'center', color: '#6b7280', padding: '15px' }}>No component mutations identified.</td></tr> :
+                                    rowsToRender.map((row, idx) => {
+                                        const isAdded = row.newQty > row.oldQty;
+                                        const isRemoved = row.newQty < row.oldQty;
+                                        return (
+                                            <tr key={idx}>
+                                                <td style={{ fontWeight: '600' }}>{row.name}</td>
+                                                <td>
+                                                    {isAdded ? <span style={{ color: '#046c4e', fontWeight: 'bold' }}>{row.newQty} 🟢</span> : isRemoved ? <span style={{ color: '#9b1c1c', fontWeight: 'bold' }}>{row.newQty} 🔴</span> : <span>{row.newQty}</span>}
+                                                </td>
+                                                <td style={{ color: '#6b7280' }}>{row.oldQty}</td>
+                                            </tr>
+                                        );
+                                    });
+                            })()}
                         </tbody>
                     </table>
                 </div>
@@ -120,46 +266,48 @@ const EcoCompare = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {compareData.newDraft.operations.map((nop, idx) => {
-                                const oldOp = compareData.oldProduct?.operations?.find(o => String(o.workCenter) === String(nop.workCenter));
-                                const oldTime = oldOp ? oldOp.time : 0;
-                                const newTime = nop.time;
-                                const isAdded = newTime > oldTime;
-                                const isRemoved = newTime < oldTime;
-                                return (
-                                    <tr key={idx}>
-                                        <td style={{ fontWeight: '600' }}>{nop.workCenter}</td>
-                                        <td>
-                                            {isAdded ? <span style={{ color: '#046c4e', fontWeight: 'bold' }}>{newTime} min 🟢</span> : isRemoved ? <span style={{ color: '#9b1c1c', fontWeight: 'bold' }}>{newTime} min 🔴</span> : <span>{newTime} min</span>}
-                                        </td>
-                                        <td style={{ color: '#6b7280' }}>{oldTime} min</td>
-                                    </tr>
-                                );
-                            })}
-                            {compareData.oldProduct?.operations?.filter(oldOp => !compareData.newDraft.operations.some(nop => String(nop.workCenter) === String(oldOp.workCenter))).map((oldOp, idx) => (
-                                <tr key={`old-op-${idx}`}>
-                                    <td style={{ fontWeight: '600' }}>{oldOp.workCenter}</td>
-                                    <td><span style={{ color: '#9b1c1c', fontWeight: 'bold' }}>0 min 🔴</span></td>
-                                    <td style={{ color: '#6b7280' }}>{oldOp.time} min</td>
-                                </tr>
-                            ))}
+                            {(() => {
+                                let newOps = compareData.newDraft.operations || [];
+                                let oldOps = compareData.oldProduct?.operations || [];
+                                let rowsToRender = [];
+
+                                newOps.forEach(nop => {
+                                    const oldOp = oldOps.find(o => String(o.workCenter) === String(nop.workCenter));
+                                    const oldTime = oldOp ? oldOp.time : 0;
+                                    const newTime = nop.time;
+                                    const changed = oldTime !== newTime;
+                                    if (!showChangedOnly || changed) rowsToRender.push({ name: nop.workCenter, oldTime, newTime });
+                                });
+
+                                oldOps.forEach(oop => {
+                                    const existsNew = newOps.some(nop => String(nop.workCenter) === String(oop.workCenter));
+                                    if (!existsNew) {
+                                        rowsToRender.push({ name: oop.workCenter, oldTime: oop.time, newTime: 0 });
+                                    }
+                                });
+
+                                return rowsToRender.length === 0 ?
+                                    <tr><td colSpan="3" style={{ textAlign: 'center', color: '#6b7280', padding: '15px' }}>No operations mutations identified.</td></tr> :
+                                    rowsToRender.map((row, idx) => {
+                                        const isAdded = row.newTime > row.oldTime;
+                                        const isRemoved = row.newTime < row.oldTime;
+                                        return (
+                                            <tr key={idx}>
+                                                <td style={{ fontWeight: '600' }}>{row.name}</td>
+                                                <td>
+                                                    {isAdded ? <span style={{ color: '#046c4e', fontWeight: 'bold' }}>{row.newTime} min 🟢</span> : isRemoved ? <span style={{ color: '#9b1c1c', fontWeight: 'bold' }}>{row.newTime} min 🔴</span> : <span>{row.newTime} min</span>}
+                                                </td>
+                                                <td style={{ color: '#6b7280' }}>{row.oldTime} min</td>
+                                            </tr>
+                                        );
+                                    });
+                            })()}
                         </tbody>
                     </table>
                 </div>
             )}
 
-            {showFull && (
-                <div style={{ display: 'flex', gap: '20px', marginTop: '20px' }}>
-                    <div className="card" style={{ flex: 1, overflowX: 'auto', background: '#111827', color: '#10b981' }}>
-                        <h4 style={{ color: '#fff', marginTop: 0, borderBottom: '1px solid #374151', paddingBottom: '10px' }}>Active Product Signature</h4>
-                        <pre style={{ fontSize: '12px' }}>{JSON.stringify(compareData.oldProduct, null, 2)}</pre>
-                    </div>
-                    <div className="card" style={{ flex: 1, overflowX: 'auto', background: '#111827', color: '#3b82f6' }}>
-                        <h4 style={{ color: '#fff', marginTop: 0, borderBottom: '1px solid #374151', paddingBottom: '10px' }}>Proposed Sandbox Dump</h4>
-                        <pre style={{ fontSize: '12px' }}>{JSON.stringify(compareData.newDraft, null, 2)}</pre>
-                    </div>
-                </div>
-            )}
+
         </div>
     );
 };
