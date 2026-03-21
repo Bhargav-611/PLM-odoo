@@ -65,7 +65,7 @@ const BomList = () => {
                             <th>Active Version</th>
                             <th>Components Logic</th>
                             <th>Operations Logic</th>
-                            <th>Status</th>
+                            <th>Status & Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -79,6 +79,11 @@ const BomList = () => {
                                 <td onClick={e => e.stopPropagation()}>
                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                         <span className="badge badge-active" style={{ background: bom.isActive ? '#def7ec' : '#fde8e8', color: bom.isActive ? '#046c4e' : '#9b1c1c' }}>{bom.isActive ? 'ACTIVE' : 'ARCHIVED'}</span>
+                                        {['ENGINEER', 'ADMIN'].includes(role) && (
+                                            <Link to={`/eco/new`} className="btn" style={{ background: '#e0e7ff', color: '#4338ca', padding: '5px 10px', fontSize: '11px', textDecoration: 'none', borderRadius: '4px' }}>
+                                                Change Option
+                                            </Link>
+                                        )}
                                         {role === 'ADMIN' && (
                                             <button onClick={() => handleDelete(bom._id)} style={{ background: 'transparent', border: 'none', color: '#ef4444', fontWeight: 'bold', cursor: 'pointer', fontSize: '11px' }}>
                                                 PURGE
@@ -103,44 +108,79 @@ const BomList = () => {
                     <div className="modal-content" style={{ maxWidth: '800px' }} onClick={e => e.stopPropagation()}>
                         <span className="modal-close" onClick={() => setSelectedBom(null)}>&times;</span>
                         <h3 style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: '12px' }}>BoM Baseline: {selectedBom.productId?.name}</h3>
-
                         <div style={{ marginTop: '20px' }}>
-                            <h4>Version History (Lifecycle Trace)</h4>
-                            <table className="table" style={{ fontSize: '13px' }}>
-                                <thead>
-                                    <tr>
-                                        <th>Version</th>
-                                        <th>Status</th>
-                                        <th>Components</th>
-                                        <th>Operations</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {versionHistory.map(vh => (
-                                        <tr key={vh._id}>
-                                            <td style={{ fontWeight: 'bold' }}>v{vh.versionNumber}.0</td>
-                                            <td>
-                                                <span className={`badge ${vh.status === 'ACTIVE' ? 'badge-active' : 'badge-archived'}`}>
-                                                    {vh.status}
-                                                </span>
-                                            </td>
-                                            <td>{vh.components?.length || 0} items</td>
-                                            <td>{vh.operations?.length || 0} steps</td>
-                                            <td>{new Date(vh.createdAt).toLocaleDateString()}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                            <h4 style={{ color: '#111827', margin: '0 0 15px 0' }}>Active Configuration: v{selectedBom.currentVersionId?.versionNumber || 1}.0</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', background: '#f9fafb', padding: '15px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                                <div>
+                                    <h5 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '12px', fontWeight: 'bold' }}>COMPONENTS LOGIC ({selectedBom.currentVersionId?.components?.length || 0})</h5>
+                                    {selectedBom.currentVersionId?.components?.length > 0 ? (
+                                        <ul style={{ paddingLeft: '20px', margin: 0 }}>
+                                            {selectedBom.currentVersionId.components.map((c, i) => (
+                                                <li key={i} style={{ fontSize: '13px', marginBottom: '4px' }}>
+                                                    <strong>{c.componentName}</strong>: {c.quantity} units
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0 }}>No dependencies registered.</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <h5 style={{ color: '#6b7280', margin: '0 0 10px 0', fontSize: '12px', fontWeight: 'bold' }}>OPERATIONS LOGIC ({selectedBom.currentVersionId?.operations?.length || 0})</h5>
+                                    {selectedBom.currentVersionId?.operations?.length > 0 ? (
+                                        <ol style={{ paddingLeft: '20px', margin: 0 }}>
+                                            {selectedBom.currentVersionId.operations.map((o, i) => (
+                                                <li key={i} style={{ fontSize: '13px', marginBottom: '4px' }}>
+                                                    <strong>{o.workCenter}</strong> ({o.time} min)
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    ) : (
+                                        <p style={{ fontSize: '13px', color: '#9ca3af', margin: 0 }}>No manufacturing steps registered.</p>
+                                    )}
+                                </div>
+                            </div>
                         </div>
+
+                        {role !== 'OPERATOR' && (
+                            <div style={{ marginTop: '20px' }}>
+                                <h4>Version History (Lifecycle Trace)</h4>
+                                <table className="table" style={{ fontSize: '13px' }}>
+                                    <thead>
+                                        <tr>
+                                            <th>Version</th>
+                                            <th>Status</th>
+                                            <th>Components</th>
+                                            <th>Operations</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {versionHistory.map(vh => (
+                                            <tr key={vh._id}>
+                                                <td style={{ fontWeight: 'bold' }}>v{vh.versionNumber}.0</td>
+                                                <td>
+                                                    <span className={`badge ${vh.status === 'ACTIVE' ? 'badge-active' : 'badge-archived'}`}>
+                                                        {vh.status}
+                                                    </span>
+                                                </td>
+                                                <td>{vh.components?.length || 0} items</td>
+                                                <td>{vh.operations?.length || 0} steps</td>
+                                                <td>{new Date(vh.createdAt).toLocaleDateString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
 
                         <div style={{ marginTop: '24px', textAlign: 'right' }}>
                             <button onClick={() => setSelectedBom(null)} className="btn" style={{ background: '#f3f4f6' }}>Close Architecture View</button>
                         </div>
                     </div>
-                </div>
+                </div >
             )}
-        </div>
+        </div >
     );
 };
 export default BomList;

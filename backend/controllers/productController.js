@@ -11,7 +11,7 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
     try {
-        const products = await productService.getAllProducts();
+        const products = await productService.getAllProducts(req.user);
         res.json(products);
     } catch (err) {
         res.status(500).json({ message: err.message });

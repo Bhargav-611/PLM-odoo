@@ -28,8 +28,12 @@ const EcoCreate = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await API.post('/eco/create', formData);
-            navigate('/eco');
+            const res = await API.post('/eco/create', formData);
+            if (res.data._id) {
+                navigate(`/eco/${res.data._id}/edit`);
+            } else {
+                navigate('/eco');
+            }
         } catch (err) { setMessage(err.response?.data?.message || 'Error'); }
     }
 
@@ -107,7 +111,7 @@ const EcoCreate = () => {
                     {message && <p style={{ color: '#ef4444', fontWeight: 'bold' }}>{message}</p>}
 
                     <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px', padding: '12px' }}>
-                        Submit Request (NEW_REQUEST)
+                        Save Draft Request
                     </button>
                 </form>
             </div>
