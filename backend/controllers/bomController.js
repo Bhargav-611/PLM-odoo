@@ -27,3 +27,12 @@ exports.deleteBOM = async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 };
+
+exports.getBOMVersions = async (req, res) => {
+    try {
+        const versions = await bomService.getBOMVersions(req.params.id);
+        res.json(versions);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};

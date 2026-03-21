@@ -32,7 +32,9 @@ exports.createECO = async (data, user) => {
         ecoType: data.ecoType || 'PRODUCT',
         productId: data.productId,
         requestedBy: user.id,
-        stage: 'NEW_REQUEST'
+        stage: 'NEW_REQUEST',
+        effectiveDate: data.effectiveDate,
+        versionUpdate: data.versionUpdate || false
     });
     await eco.save();
     await logAction('ECO_CREATED', 'ECO', eco._id, null, { title: data.title, stage: 'NEW_REQUEST' }, user.id);
@@ -133,6 +135,7 @@ exports.finalApprove = async (ecoId, user) => {
 
     const oldStage = eco.stage;
     eco.stage = this.getNextStage(eco.stage);
+    if (!eco.effectiveDate) eco.effectiveDate = new Date(); // Auto-populate if missing
     await eco.save();
     await logAction('ECO_FINAL_APPROVED', 'ECO', eco._id, { stage: oldStage }, { stage: eco.stage }, user.id);
     return eco;
@@ -145,14 +148,18 @@ exports.applyECO = async (ecoId, user) => {
     if (!eco) throw new Error('ECO not found');
     if (eco.stage !== 'DONE') throw new Error('ECO must be DONE to apply');
 
-    if (eco.ecoType === 'BOM') {
-        const bom = await BOM.findOne({ productId: eco.productId });
-        if (!bom) throw new Error('No Master BoM tracking mapped explicitly inside node integrations.');
-        const newVersion = await bomService.createNewVersion(bom._id, eco.changesFinal, null, user.id);
-        await logAction('ECO_APPLIED', 'BOM', newVersion._id, null, { appliedECO: eco._id }, user.id);
+    if (eco.versionUpdate) {
+        if (eco.ecoType === 'BOM') {
+            const bom = await BOM.findOne({ productId: eco.productId });
+            if (!bom) throw new Error('No Master BoM tracking mapped explicitly inside node integrations.');
+            const newVersion = await bomService.createNewVersion(bom._id, eco.changesFinal, null, user.id);
+            await logAction('ECO_APPLIED', 'BOM', newVersion._id, null, { appliedECO: eco._id }, user.id);
+        } else {
+            const newVersion = await productService.createNewProductVersion(eco.productId, eco.changesFinal, null, user.id);
+            await logAction('ECO_APPLIED', 'Product', newVersion._id, null, { appliedECO: eco._id }, user.id);
+        }
     } else {
-        const newVersion = await productService.createNewProductVersion(eco.productId, eco.changesFinal, null, user.id);
-        await logAction('ECO_APPLIED', 'Product', newVersion._id, null, { appliedECO: eco._id }, user.id);
+        await logAction('ECO_ARCHIVED_WITHOUT_VERSION', 'ECO', eco._id, null, { message: 'Workflow completed without master version update.' }, user.id);
     }
 
     const oldStage = eco.stage;

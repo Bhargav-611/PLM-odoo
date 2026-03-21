@@ -9,8 +9,11 @@ const EcoCreate = () => {
         title: '',
         changeDescription: '',
         productId: '',
-        ecoType: 'PRODUCT'
+        ecoType: 'PRODUCT',
+        effectiveDate: new Date().toISOString().slice(0, 16),
+        versionUpdate: true
     });
+    const userName = localStorage.getItem('name') || 'Current User';
     const [message, setMessage] = useState('');
 
     useEffect(() => {
@@ -55,11 +58,39 @@ const EcoCreate = () => {
                             </select>
                         </div>
                         <div style={{ flex: 2 }}>
-                            <label style={{ fontWeight: 'bold' }}>Target Item (Product) *</label>
+                            <label style={{ fontWeight: 'bold' }}>Type of ECO Selection *</label>
                             <select name="productId" onChange={handleChange} required value={formData.productId}>
                                 {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                             </select>
                         </div>
+                    </div>
+
+                    <div className="form-group" style={{ display: 'flex', gap: '20px' }}>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ fontWeight: 'bold' }}>Initiated By (Read-only)</label>
+                            <input type="text" value={userName} readOnly style={{ background: '#f3f4f6' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <label style={{ fontWeight: 'bold' }}>Effective Date & Time</label>
+                            <input
+                                type="datetime-local"
+                                name="effectiveDate"
+                                value={formData.effectiveDate}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <input
+                            type="checkbox"
+                            name="versionUpdate"
+                            checked={formData.versionUpdate}
+                            onChange={e => setFormData({ ...formData, versionUpdate: e.target.checked })}
+                            style={{ width: 'auto' }}
+                        />
+                        <label style={{ fontWeight: 'bold', margin: 0 }}>Version Update (Auto-increment on master data when DONE)</label>
                     </div>
 
                     <div className="form-group">
