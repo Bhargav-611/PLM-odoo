@@ -82,17 +82,17 @@ This workflow ensures that all engineering changes are controlled, approved, ver
 To run this project locally, first clone the repository from GitHub and move into the project folder.
 
 ```bash
-git clone https://github.com/your-username/plm-eco-system.git
-cd plm-eco-system
+git clone https://github.com/Bhargav-611/PLM-odoo.git
+cd PLM-odoo
 ```
 
 Install dependencies for both frontend and backend.
 
 ```bash
-cd client
+cd backend
 npm install
 
-cd ../server
+cd ../frontend
 npm install
 ```
 
@@ -117,7 +117,7 @@ AWS_S3_BUCKET=REPLACE_YOUR_BUCKET
 Run the backend server.
 
 ```bash
-npm start
+node server.js
 ```
 
 or
@@ -129,20 +129,14 @@ nodemon index.js
 Run the frontend.
 
 ```bash
-cd ../client
+cd ../frontend
 npm run dev
-```
-
-or
-
-```bash
-npm start
 ```
 
 Open the browser and go to:
 
 ```
-http://localhost:3000
+http://localhost:5173
 ```
 
 Login to the system and access the dashboard where you can manage Products, Bill of Materials (BoM), and Engineering Change Orders (ECO).
