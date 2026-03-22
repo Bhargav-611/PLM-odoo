@@ -12,7 +12,7 @@ exports.createBOM = async (req, res) => {
 
 exports.getAllBOMs = async (req, res) => {
     try {
-        const boms = await bomService.getActiveBOMs();
+        const boms = await bomService.getActiveBOMs(req.user);
         res.json(boms);
     } catch (err) {
         res.status(400).json({ message: err.message });

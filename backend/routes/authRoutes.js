@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
+router.get('/users', authController.getAllUsers);
+router.get('/me', protect, authController.getMe);
 
 // OTP Routes
 router.post('/forgot-password', authController.forgotPassword);

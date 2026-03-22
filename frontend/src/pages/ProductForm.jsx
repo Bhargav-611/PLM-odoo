@@ -8,13 +8,22 @@ const ProductForm = () => {
         name: '', salePrice: '', costPrice: ''
     });
     const [image, setImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState('');
     const [attachments, setAttachments] = useState([]);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const handleImage = (e) => setImage(e.target.files[0]);
+    const handleImage = (e) => {
+        const file = e.target.files[0];
+        setImage(file);
+        if (file) {
+            setImagePreview(URL.createObjectURL(file));
+        } else {
+            setImagePreview('');
+        }
+    };
     const handleAttachments = (e) => setAttachments(e.target.files);
 
     const handleSubmit = async (e) => {
@@ -78,6 +87,9 @@ const ProductForm = () => {
                     <div className="form-group">
                         <label>Featured Primary Media</label>
                         <input type="file" accept="image/*" onChange={handleImage} />
+                        {imagePreview && (
+                            <img src={imagePreview} alt="Preview" style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '8px', marginTop: '10px' }} />
+                        )}
                     </div>
 
                     <div className="form-group">

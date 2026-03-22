@@ -11,7 +11,8 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
     resetOtp: { type: String },
-    resetOtpExpires: { type: Date }
+    resetOtpExpires: { type: Date },
+    speciality: { type: String }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', UserSchema);

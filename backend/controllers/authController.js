@@ -3,12 +3,25 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
 
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await User.find().select('-password');
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 exports.signup = async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password, role, speciality } = req.body;
 
         let user = await User.findOne({ email });
         if (user) return res.status(400).json({ message: 'User already exists' });
+
+        if (role === 'APPROVER' && !speciality) {
+            return res.status(400).json({ message: 'Speciality is mandatory for Approver accounts' });
+        }
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -17,7 +30,8 @@ exports.signup = async (req, res) => {
             name,
             email,
             password: hashedPassword,
-            role: role || 'ENGINEER'
+            role: role || 'ENGINEER',
+            speciality: role === 'APPROVER' ? speciality : undefined
         });
 
         await user.save();
@@ -47,7 +61,7 @@ exports.login = async (req, res) => {
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        res.json({ token, role: user.role, name: user.name });
+        res.json({ token, role: user.role, name: user.name, email: user.email });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -133,6 +147,16 @@ exports.resetPassword = async (req, res) => {
         await user.save();
 
         res.json({ message: 'Password reset successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

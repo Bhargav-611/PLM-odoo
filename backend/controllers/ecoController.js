@@ -9,15 +9,6 @@ exports.createECO = async (req, res) => {
     }
 };
 
-exports.approveRequest = async (req, res) => {
-    try {
-        const eco = await ecoService.approveRequest(req.params.id, req.user);
-        res.json(eco);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-};
-
 exports.editECO = async (req, res) => {
     try {
         const eco = await ecoService.editECO(req.params.id, req.body.changesDraft, req.user);
@@ -27,9 +18,55 @@ exports.editECO = async (req, res) => {
     }
 };
 
-exports.sendFinalApproval = async (req, res) => {
+exports.submitECOForApproval = async (req, res) => {
     try {
-        const eco = await ecoService.sendFinalApproval(req.params.id, req.user);
+        const eco = await ecoService.submitECOForApproval(req.params.id, req.user);
+        res.json(eco);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.assignApprovers = async (req, res) => {
+    try {
+        // Support either approverIds or approvers flawlessly flaws Node flawlessly!
+        const eco = await ecoService.assignApprovers(req.params.id, req.body.approvers || req.body.approverIds, req.user);
+        res.json(eco);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.skipApprover = async (req, res) => {
+    try {
+        const eco = await ecoService.skipApprover(req.params.id, req.user);
+        res.json(eco);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.approveECO = async (req, res) => {
+    try {
+        const eco = await ecoService.approveECO(req.params.id, req.user);
+        res.json(eco);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.rejectECO = async (req, res) => {
+    try {
+        const eco = await ecoService.rejectECO(req.params.id, req.body.reason, req.user);
+        res.json(eco);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.applyECOChanges = async (req, res) => {
+    try {
+        const eco = await ecoService.applyECOChanges(req.params.id, req.user);
         res.json(eco);
     } catch (err) {
         res.status(400).json({ message: err.message });
@@ -45,27 +82,9 @@ exports.compareECO = async (req, res) => {
     }
 };
 
-exports.finalApprove = async (req, res) => {
-    try {
-        const eco = await ecoService.finalApprove(req.params.id, req.user);
-        res.json(eco);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-};
-
-exports.applyECO = async (req, res) => {
-    try {
-        const eco = await ecoService.applyECO(req.params.id, req.user);
-        res.json(eco);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-};
-
 exports.getAllECO = async (req, res) => {
     try {
-        const ecos = await ecoService.getAllECO();
+        const ecos = await ecoService.getAllECO(req.user);
         res.json(ecos);
     } catch (err) {
         res.status(400).json({ message: err.message });
