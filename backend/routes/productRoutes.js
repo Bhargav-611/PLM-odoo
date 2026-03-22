@@ -12,6 +12,7 @@ const uploadFields = upload.fields([
 
 router.post('/create', protect, checkRole('ADMIN'), uploadFields, productController.createProduct);
 router.get('/', protect, productController.getProducts); // Anyone authenticated can read
+router.get('/image-proxy', productController.getImageProxy);
 router.get('/:id', protect, productController.getProductById);
 router.get('/:id/history', protect, productController.getProductHistory);
 

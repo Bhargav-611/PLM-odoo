@@ -9,6 +9,7 @@ router.post('/:id/submit', protect, ecoController.submitECOForApproval);
 router.post('/:id/assign-approvers', protect, ecoController.assignApprovers);
 router.post('/:id/approve', protect, ecoController.approveECO);
 router.post('/:id/reject', protect, ecoController.rejectECO);
+router.post('/:id/skip', protect, ecoController.skipApprover);
 router.post('/:id/apply', protect, ecoController.applyECOChanges);
 router.get('/:id/compare', protect, ecoController.compareECO);
 

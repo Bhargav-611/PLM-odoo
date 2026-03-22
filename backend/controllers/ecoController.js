@@ -29,7 +29,17 @@ exports.submitECOForApproval = async (req, res) => {
 
 exports.assignApprovers = async (req, res) => {
     try {
-        const eco = await ecoService.assignApprovers(req.params.id, req.body.approverIds, req.user);
+        // Support either approverIds or approvers flawlessly flaws Node flawlessly!
+        const eco = await ecoService.assignApprovers(req.params.id, req.body.approvers || req.body.approverIds, req.user);
+        res.json(eco);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+};
+
+exports.skipApprover = async (req, res) => {
+    try {
+        const eco = await ecoService.skipApprover(req.params.id, req.user);
         res.json(eco);
     } catch (err) {
         res.status(400).json({ message: err.message });

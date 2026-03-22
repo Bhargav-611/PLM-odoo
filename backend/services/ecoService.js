@@ -89,7 +89,7 @@ exports.submitECOForApproval = async (ecoId, user) => {
     return eco;
 };
 
-exports.assignApprovers = async (ecoId, approverIds, user) => {
+exports.assignApprovers = async (ecoId, approversInput, user) => {
     this.checkRole(user.role, ['ADMIN']);
 
     const eco = await ECO.findById(ecoId);
@@ -98,15 +98,24 @@ exports.assignApprovers = async (ecoId, approverIds, user) => {
         throw new Error(`Cannot assign approvers to an ECO that is ${eco.status}`);
     }
 
-    if (!approverIds || approverIds.length === 0) {
+    if (eco.currentApproverIndex > 0 && eco.status === 'IN_PROGRESS') {
+        throw new Error('Cannot edit approvers once the review cycle has advanced.');
+    }
+
+    if (!approversInput || approversInput.length === 0) {
         throw new Error('Approvers list cannot be empty');
     }
 
-    const newApprovers = approverIds.map((id, index) => ({
-        user: id,
-        order: index + 1,
-        status: 'PENDING'
-    }));
+    const newApprovers = approversInput.map((a, index) => {
+        const userId = typeof a === 'string' ? a : (a.user?._id || a.user);
+        const isRequired = typeof a === 'object' && a.isRequired !== undefined ? a.isRequired : true;
+        return {
+            user: userId,
+            order: index + 1,
+            isRequired,
+            status: 'PENDING'
+        };
+    });
 
     eco.approvers = newApprovers;
     eco.currentApproverIndex = 0;
@@ -185,7 +194,45 @@ exports.rejectECO = async (ecoId, reason, user) => {
     return eco;
 };
 
+exports.skipApprover = async (ecoId, user) => {
+    const ECO = require('../models/ECO');
+    const { logAction } = require('./auditService');
+    const eco = await ECO.findById(ecoId);
+    if (!eco) throw new Error('ECO not found');
+    if (eco.status !== 'IN_PROGRESS') throw new Error('ECO is not IN_PROGRESS');
+
+    const currentA = eco.approvers[eco.currentApproverIndex];
+    if (!currentA) throw new Error('No current approver to skip');
+
+    if (currentA.isRequired) {
+        throw new Error('This approver is required and cannot be skipped');
+    }
+
+    if (eco.createdBy.toString() !== user.id && user.role !== 'ADMIN') {
+        throw new Error('Not authorized to skip this approver');
+    }
+
+    currentA.status = 'APPROVED';
+    currentA.approvedAt = new Date();
+    
+    eco.currentApproverIndex += 1;
+
+    if (eco.currentApproverIndex >= eco.approvers.length) {
+        eco.isReadyForFinalApproval = true;
+    }
+
+    await eco.save();
+    await logAction('ECO_APPROVER_SKIPPED', 'ECO', eco._id, null, { skippedApprover: currentA.user }, user.id);
+    return eco;
+};
+
 exports.applyECOChanges = async (ecoId, user) => {
+    const ECO = require('../models/ECO');
+    const BOM = require('../models/BOM');
+    const bomService = require('./bomService');
+    const productService = require('./productService');
+    const { logAction } = require('./auditService');
+
     this.checkRole(user.role, ['ADMIN']);
 
     const eco = await ECO.findById(ecoId);
@@ -196,7 +243,6 @@ exports.applyECOChanges = async (ecoId, user) => {
     if (eco.versionUpdate) {
         if (eco.ecoType === 'BOM') {
             const bom = await BOM.findOne({ productId: eco.productId });
-            if (!bom) throw new Error('No Master BoM tracking mapped explicitly inside node integrations.');
             const newVersion = await bomService.createNewVersion(bom._id, eco.changesFinal, null, user.id);
             await logAction('ECO_APPLIED', 'BOM', newVersion._id, null, { appliedECO: eco._id }, user.id);
         } else {
@@ -204,7 +250,25 @@ exports.applyECOChanges = async (ecoId, user) => {
             await logAction('ECO_APPLIED', 'Product', newVersion._id, null, { appliedECO: eco._id }, user.id);
         }
     } else {
-        await logAction('ECO_ARCHIVED_WITHOUT_VERSION', 'ECO', eco._id, null, { message: 'Workflow completed without master version update.' }, user.id);
+        if (eco.ecoType === 'BOM') {
+            const bom = await BOM.findOne({ productId: eco.productId });
+            const BOMVersion = require('../models/BOMVersion');
+            const activeVersion = await BOMVersion.findById(bom.currentVersionId);
+            if (eco.changesFinal.components) activeVersion.components = eco.changesFinal.components;
+            if (eco.changesFinal.operations) activeVersion.operations = eco.changesFinal.operations;
+            await activeVersion.save();
+        } else {
+            const Product = require('../models/Product');
+            const ProductVersion = require('../models/ProductVersion');
+            const product = await Product.findById(eco.productId);
+            const activeVersion = await ProductVersion.findById(product.currentVersionId);
+            if (eco.changesFinal.salePrice !== undefined) activeVersion.salePrice = eco.changesFinal.salePrice;
+            if (eco.changesFinal.costPrice !== undefined) activeVersion.costPrice = eco.changesFinal.costPrice;
+            if (eco.changesFinal.name) product.name = eco.changesFinal.name;
+            await activeVersion.save();
+            await product.save();
+        }
+        await logAction('ECO_APPLIED_WITHOUT_VERSION_INCREMENT', 'ECO', eco._id, null, { message: 'Workflow completed with direct version edit.' }, user.id);
     }
 
     eco.status = 'APPROVED';

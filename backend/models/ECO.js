@@ -23,6 +23,7 @@ const ECOSchema = new mongoose.Schema({
     approvers: [{
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         order: { type: Number, required: true }, // 1, 2, 3...
+        isRequired: { type: Boolean, default: true },
         status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' },
         approvedAt: { type: Date },
         rejectedAt: { type: Date }
