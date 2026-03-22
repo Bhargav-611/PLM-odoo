@@ -61,7 +61,7 @@ exports.login = async (req, res) => {
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        res.json({ token, role: user.role, name: user.name });
+        res.json({ token, role: user.role, name: user.name, email: user.email });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -147,6 +147,16 @@ exports.resetPassword = async (req, res) => {
         await user.save();
 
         res.json({ message: 'Password reset successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        res.json(user);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

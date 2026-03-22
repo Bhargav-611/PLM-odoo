@@ -40,77 +40,117 @@ const EcoCreate = () => {
     const handleChange = e => setFormData({ ...formData, [e.target.name]: e.target.value });
 
     return (
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
-                <Link to="/eco" style={{ color: '#0052cc', marginRight: '15px', textDecoration: 'none', fontWeight: '500' }}>&larr; Return</Link>
-                <h2 style={{ margin: 0, color: '#111827' }}>Initiate New ECO</h2>
+        <div className="max-w-2xl mx-auto px-4 py-8">
+            <div className="flex items-center gap-4 mb-6">
+                <Link to="/eco" className="flex items-center text-blue-600 hover:text-blue-500 font-bold text-sm transition-colors">
+                    &larr; Back to Workflow
+                </Link>
+                <h2 className="text-xl font-black text-slate-800 tracking-tight">Initiate New ECO Request</h2>
             </div>
 
-            <div className="card">
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label style={{ fontWeight: 'bold' }}>ECO Title *</label>
-                        <input type="text" name="title" onChange={handleChange} required placeholder="e.g. Price Adjustment Q2" />
+            <div className="bg-white rounded-2xl border border-slate-100/80 shadow-sm p-6 md:p-8">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    
+                    {/* Title */}
+                    <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">ECO Title *</label>
+                        <input 
+                            type="text" 
+                            name="title" 
+                            onChange={handleChange} 
+                            required 
+                            placeholder="e.g. Price Adjustment Q2" 
+                            className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm placeholder:text-slate-300"
+                        />
                     </div>
 
-                    <div className="form-group" style={{ display: 'flex', gap: '20px' }}>
-                        <div style={{ flex: 1 }}>
-                            <label style={{ fontWeight: 'bold' }}>ECO Type *</label>
-                            <select name="ecoType" value={formData.ecoType} onChange={handleChange} required>
+                    {/* Grid: Type & Product */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-1">
+                            <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">ECO Type *</label>
+                            <select 
+                                name="ecoType" 
+                                value={formData.ecoType} 
+                                onChange={handleChange} 
+                                required
+                                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white transition-all text-sm"
+                            >
                                 <option value="PRODUCT">PRODUCT</option>
                                 <option value="BOM">BOM</option>
                             </select>
                         </div>
-                        <div style={{ flex: 2 }}>
-                            <label style={{ fontWeight: 'bold' }}>Type of ECO Selection *</label>
-                            <select name="productId" onChange={handleChange} required value={formData.productId}>
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Type of ECO Selection *</label>
+                            <select 
+                                name="productId" 
+                                onChange={handleChange} 
+                                required 
+                                value={formData.productId}
+                                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white transition-all text-sm"
+                            >
                                 {products.map(p => <option key={p._id} value={p._id}>{p.name}</option>)}
                             </select>
                         </div>
                     </div>
 
-                    <div className="form-group" style={{ display: 'flex', gap: '20px' }}>
-                        <div style={{ flex: 1 }}>
-                            <label style={{ fontWeight: 'bold' }}>Initiated By (Read-only)</label>
-                            <input type="text" value={userName} readOnly style={{ background: '#f3f4f6' }} />
+                    {/* Grid: Initiator & Date */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Initiated By (Read-only)</label>
+                            <input 
+                                type="text" 
+                                value={userName} 
+                                readOnly 
+                                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 outline-none text-sm cursor-not-allowed"
+                            />
                         </div>
-                        <div style={{ flex: 1 }}>
-                            <label style={{ fontWeight: 'bold' }}>Effective Date & Time</label>
+                        <div>
+                            <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Effective Date & Time</label>
                             <input
                                 type="datetime-local"
                                 name="effectiveDate"
                                 value={formData.effectiveDate}
                                 onChange={handleChange}
                                 required
+                                className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none bg-white transition-all text-sm"
                             />
                         </div>
                     </div>
 
-                    <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {/* Checkbox */}
+                    <div className="flex items-center gap-2 py-2">
                         <input
                             type="checkbox"
                             name="versionUpdate"
+                            id="versionUpdate"
                             checked={formData.versionUpdate}
                             onChange={e => setFormData({ ...formData, versionUpdate: e.target.checked })}
-                            style={{ width: 'auto' }}
+                            className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"
                         />
-                        <label style={{ fontWeight: 'bold', margin: 0 }}>Version Update (Auto-increment on master data when DONE)</label>
+                        <label htmlFor="versionUpdate" className="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                            Version Update <span className="text-slate-400 font-normal">(Auto-increment on master data when DONE)</span>
+                        </label>
                     </div>
 
-                    <div className="form-group">
-                        <label style={{ fontWeight: 'bold' }}>Justification Overview *</label>
+                    {/* Justification */}
+                    <div>
+                        <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">Justification Overview *</label>
                         <textarea
                             name="changeDescription"
                             onChange={handleChange}
                             required
                             placeholder="Why is this change necessary?"
-                            style={{ width: '100%', height: '80px', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db' }}
+                            className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm h-24 placeholder:text-slate-300 resize-none"
                         />
                     </div>
 
-                    {message && <p style={{ color: '#ef4444', fontWeight: 'bold' }}>{message}</p>}
+                    {message && (
+                        <p className="text-xs font-bold text-red-500 flex items-center gap-1 bg-red-50 px-3 py-2 rounded-lg border border-red-200/50">
+                            ⚠️ {message}
+                        </p>
+                    )}
 
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '10px', padding: '12px' }}>
+                    <button type="submit" className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm transition-all text-sm mt-2">
                         Save Draft Request
                     </button>
                 </form>
