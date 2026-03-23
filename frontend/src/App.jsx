@@ -31,7 +31,7 @@ const Navigation = () => {
     const [userData, setUserData] = useState({ name: name || '', email: email || '' });
 
     useEffect(() => {
-        console.log("API URL:", import.meta.env.VITE_API_URL);
+        // API URL verified
     }, []);
 
     useEffect(() => {
