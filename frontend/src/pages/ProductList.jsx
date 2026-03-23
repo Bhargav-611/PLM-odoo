@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import API from '../api/api';
+import API, { BASE_URL } from '../api/api';
 import { Link } from 'react-router-dom';
 import { useDialog } from '../context/DialogContext';
 
@@ -99,7 +99,7 @@ const ProductList = () => {
                                 {/* Wrapper Image with overlay */}
                                 <div className="h-48 relative overflow-hidden bg-slate-100">
                                     <img
-                                        src={v?.image ? `http://localhost:5000/api/products/image-proxy?key=${encodeURIComponent(v.image)}` : fallbackImages[index % fallbackImages.length]}
+                                        src={v?.image ? `${BASE_URL}/products/image-proxy?key=${encodeURIComponent(v.image)}` : fallbackImages[index % fallbackImages.length]}
                                         alt={p.name}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
@@ -186,7 +186,7 @@ const ProductList = () => {
 
                         <div className="h-52 relative">
                             <img
-                                src={selectedProduct.currentVersionId?.image ? `http://localhost:5000/api/products/image-proxy?key=${encodeURIComponent(selectedProduct.currentVersionId.image)}` : fallbackImages[products.indexOf(selectedProduct) % fallbackImages.length]}
+                                src={selectedProduct.currentVersionId?.image ? `${BASE_URL}/products/image-proxy?key=${encodeURIComponent(selectedProduct.currentVersionId.image)}` : fallbackImages[products.indexOf(selectedProduct) % fallbackImages.length]}
                                 alt={selectedProduct.name}
                                 className="w-full h-full object-cover"
                             />

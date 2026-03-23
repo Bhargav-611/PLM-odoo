@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
 import axios from 'axios';
+import API from '../api/api';
 import { useLocation, useNavigate, Navigate, Link } from 'react-router-dom';
 
 const VerifyOTP = () => {
@@ -21,7 +21,7 @@ const VerifyOTP = () => {
         setError('');
 
         try {
-            await axios.post('http://localhost:5000/api/auth/verify-otp', { email, otp });
+            await API.post('/auth/verify-otp', { email, otp });
             setMessage('OTP verified!');
             setTimeout(() => {
                 navigate('/reset-password', { state: { email, otp } });

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API from '../api/api';
 import { Link, useNavigate } from 'react-router-dom';
 
 const AuthPage = () => {
@@ -35,7 +35,7 @@ const AuthPage = () => {
 
         try {
             if (isLogin) {
-                const res = await axios.post('http://localhost:5000/api/auth/login', {
+                const res = await API.post('/auth/login', {
                     email: formData.email,
                     password: formData.password
                 });
@@ -49,7 +49,7 @@ const AuthPage = () => {
                 if (payload.role === 'APPROVER' && payload.speciality === 'Other') {
                     payload.speciality = payload.otherSpeciality;
                 }
-                const res = await axios.post('http://localhost:5000/api/auth/signup', payload);
+                const res = await API.post('/auth/signup', payload);
                 setMessage('Signup Successful! You can now login.');
                 setIsLogin(true);
             }
