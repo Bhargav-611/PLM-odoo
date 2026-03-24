@@ -56,7 +56,11 @@ const EcoList = () => {
     const fetchEcos = async () => {
         try {
             const res = await API.get('/eco');
-            setEcos(res.data);
+            if (Array.isArray(res.data)) {
+                setEcos(res.data);
+            } else {
+                setEcos([]);
+            }
         } catch (err) {
             console.error(err);
         }
@@ -94,10 +98,10 @@ const EcoList = () => {
         }
     };
 
-    const filteredEcos = ecos.filter(e =>
+    const filteredEcos = Array.isArray(ecos) ? ecos.filter(e =>
         e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (e.productId?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ) : [];
 
     const paginatedEcos = filteredEcos.slice(0, limit);
 

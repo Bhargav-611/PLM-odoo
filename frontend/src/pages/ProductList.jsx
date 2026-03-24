@@ -13,7 +13,12 @@ const ProductList = () => {
     const fetchProducts = async () => {
         try {
             const res = await API.get('/products');
-            setProducts(res.data);
+            if (Array.isArray(res.data)) {
+                setProducts(res.data);
+            } else {
+                console.error("API response data is not an array:", res.data);
+                setProducts([]);
+            }
         } catch (err) {
             console.error(err);
         }
@@ -35,16 +40,15 @@ const ProductList = () => {
         }
     };
 
-    const filteredProducts = products.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredProducts = Array.isArray(products) ? products.filter(p =>
+        p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
     // Fallback images for premium UI representation
     const fallbackImages = [
-        "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=600",
-        "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=600",
-        "https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&w=600",
-        "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=600"
+        "/1.png",
+        "/2.png",
+        "/3.png"
     ];
 
     return (

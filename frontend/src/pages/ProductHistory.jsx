@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import API from '../api/api';
+import API, { BASE_URL } from '../api/api';
 
 const ProductHistory = () => {
     const { id } = useParams();
@@ -124,7 +124,7 @@ const ProductHistory = () => {
                                             <div>
                                                 <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2">Primary Assets</h5>
                                                 {selectedVer.image ? (
-                                                    <a href={selectedVer.image} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg border border-blue-100/40 hover:bg-blue-100 transition-colors">
+                                                    <a href={`${BASE_URL}/products/image-proxy?key=${encodeURIComponent(selectedVer.image)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-600 text-xs font-bold rounded-lg border border-blue-100/40 hover:bg-blue-100 transition-colors">
                                                         <span>&#128444; Media Gallery</span>
                                                     </a>
                                                 ) : (

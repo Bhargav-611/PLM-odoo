@@ -10,12 +10,18 @@ const Report = () => {
 
     useEffect(() => {
         API.get('/report/logs')
-            .then(res => setLogs(res.data))
+            .then(res => {
+                if (Array.isArray(res.data)) {
+                    setLogs(res.data);
+                } else {
+                    setLogs([]);
+                }
+            })
             .catch(console.error);
     }, []);
 
     // Filter Logic combining Search and Category Pills
-    const filteredLogs = logs.filter(l => {
+    const filteredLogs = Array.isArray(logs) ? logs.filter(l => {
         const matchesSearch = l.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              l.entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
                              (l.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -23,7 +29,7 @@ const Report = () => {
         const matchesCategory = activeFilter === 'ALL' || l.entity.toUpperCase() === activeFilter;
 
         return matchesSearch && matchesCategory;
-    });
+    }) : [];
 
     const paginatedLogs = filteredLogs.slice(0, limit);
 

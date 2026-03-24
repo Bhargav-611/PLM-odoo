@@ -13,7 +13,13 @@ const BomList = () => {
     const [activeVersion, setActiveVersion] = useState(null); // Currently selected version inside modal
     const role = localStorage.getItem('role');
 
-    const fetchBoms = () => API.get('/bom').then(res => setBoms(res.data)).catch(console.error);
+    const fetchBoms = () => API.get('/bom').then(res => {
+        if (Array.isArray(res.data)) {
+            setBoms(res.data);
+        } else {
+            setBoms([]);
+        }
+    }).catch(console.error);
 
     useEffect(() => {
         fetchBoms();
@@ -45,9 +51,9 @@ const BomList = () => {
         } catch (err) { console.error("History fetch failed", err); }
     };
 
-    const filteredBoms = boms.filter(b =>
+    const filteredBoms = Array.isArray(boms) ? boms.filter(b =>
         (b.productId?.name || '').toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ) : [];
 
     const paginatedBoms = filteredBoms.slice(0, limit);
 
