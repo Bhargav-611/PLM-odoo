@@ -31,6 +31,10 @@ const Navigation = () => {
     const [userData, setUserData] = useState({ name: name || '', email: email || '' });
 
     useEffect(() => {
+        // API URL verified
+    }, []);
+
+    useEffect(() => {
         if (token && (!userData.name || !userData.email)) {
             API.get('/auth/me')
                 .then(res => {
@@ -55,16 +59,16 @@ const Navigation = () => {
         <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100/80 shadow-sm font-sans mb-8">
             <div className="max-w-7xl mx-auto px-6 lg:px-12">
                 <div className="flex items-center justify-between h-16">
-                    
+
                     {/* 1. Logo Slot (Left) */}
                     <Link to="/" className="flex items-center gap-2 group cursor-pointer flex-shrink-0">
                         <div className="relative">
                             <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-300 -z-0"></div>
-                            <img 
-                                src="/2.png" 
-                                className="w-10 h-10 relative z-10 group-hover:scale-105 transition-transform object-contain mix-blend-multiply" 
+                            <img
+                                src="/2.png"
+                                className="w-10 h-10 relative z-10 group-hover:scale-105 transition-transform object-contain mix-blend-multiply"
                                 style={{ filter: 'invert(24%) sepia(87%) saturate(2250%) hue-rotate(210deg) brightness(95%) contrast(98%)' }}
-                                alt="Logo" 
+                                alt="Logo"
                             />
                         </div>
                         <span className="text-lg font-bold text-slate-800 tracking-tight">
@@ -102,7 +106,7 @@ const Navigation = () => {
                     <div className="flex items-center gap-4 flex-shrink-0">
                         {token ? (
                             <>
-                                <div 
+                                <div
                                     className="relative flex items-center"
                                     onMouseEnter={() => setIsHovered(true)}
                                     onMouseLeave={() => setIsHovered(false)}
@@ -110,7 +114,7 @@ const Navigation = () => {
                                     <span className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded-full font-bold text-[11px] tracking-wide shadow-sm transition-colors cursor-pointer">
                                         {role}
                                     </span>
-                                    
+
                                     {isHovered && (
                                         <div className="absolute top-full right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 p-3 flex flex-col items-start gap-1 z-50 animate-fadeIn min-w-[160px] animate-zoomIn">
                                             <div className="w-full border-b border-slate-50 pb-1.5 mb-1">
@@ -121,8 +125,8 @@ const Navigation = () => {
                                         </div>
                                     )}
                                 </div>
-                                <button 
-                                    onClick={handleLogout} 
+                                <button
+                                    onClick={handleLogout}
                                     className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-50 hover:bg-red-100 text-red-600 font-bold text-xs ring-1 ring-red-200/50 transition-all cursor-pointer"
                                 >
                                     Logout
@@ -130,8 +134,8 @@ const Navigation = () => {
                             </>
                         ) : (
                             !isAuthRoute && (
-                                <Link 
-                                    to="/login" 
+                                <Link
+                                    to="/login"
                                     className="px-5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all"
                                 >
                                     Login

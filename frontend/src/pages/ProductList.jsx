@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import API from '../api/api';
+import API, { BASE_URL } from '../api/api';
 import { Link } from 'react-router-dom';
 import { useDialog } from '../context/DialogContext';
 
@@ -30,8 +30,8 @@ const ProductList = () => {
         try {
             await API.delete(`/products/${id}`);
             fetchProducts();
-        } catch (err) { 
-            showAlert(err.response?.data?.message || 'Delete failed'); 
+        } catch (err) {
+            showAlert(err.response?.data?.message || 'Delete failed');
         }
     };
 
@@ -49,7 +49,7 @@ const ProductList = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8 font-sans">
-            
+
             {/* 1. Header Area */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
@@ -91,17 +91,17 @@ const ProductList = () => {
                         const v = p.currentVersionId;
 
                         return (
-                            <div 
-                                key={p._id} 
-                                onClick={() => setSelectedProduct(p)} 
+                            <div
+                                key={p._id}
+                                onClick={() => setSelectedProduct(p)}
                                 className="bg-white rounded-2xl border border-slate-100/80 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 cursor-pointer group flex flex-col relative"
                             >
                                 {/* Wrapper Image with overlay */}
                                 <div className="h-48 relative overflow-hidden bg-slate-100">
-                                    <img 
-                                        src={v?.image ? `http://localhost:5000/api/products/image-proxy?key=${encodeURIComponent(v.image)}` : ''} 
-                                        alt={p.name} 
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                    <img
+                                        src={v?.image ? `${BASE_URL}/products/image-proxy?key=${encodeURIComponent(v.image)}` : fallbackImages[index % fallbackImages.length]}
+                                        alt={p.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     />
                                     <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-700 shadow-sm">
                                         {v?.versionLabel || `v${v?.versionNumber || '1.0'}`}
@@ -154,7 +154,7 @@ const ProductList = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Absolute Version Bubbles (Conditional bleeding) */}
                                 {v?.versionNumber > 1 && (
                                     <div className="opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300 absolute -bottom-4 left-0 w-full flex items-center justify-center gap-2 z-30">
@@ -176,8 +176,8 @@ const ProductList = () => {
             {/* 3. Smooth Container Expansion Modal View (Click functionality overlay overlap) */}
             {selectedProduct && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn" onClick={() => setSelectedProduct(null)}>
-                    <div 
-                        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden animate-zoomIn" 
+                    <div
+                        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl relative overflow-hidden animate-zoomIn"
                         onClick={e => e.stopPropagation()}
                     >
                         <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 bg-white/80 rounded-full p-1.5 shadow-md text-slate-400 hover:text-slate-900 transition-colors z-20">
@@ -185,10 +185,10 @@ const ProductList = () => {
                         </button>
 
                         <div className="h-52 relative">
-                            <img 
-                                src={selectedProduct.imageUrl || fallbackImages[products.indexOf(selectedProduct) % fallbackImages.length]} 
-                                alt={selectedProduct.name} 
-                                className="w-full h-full object-cover" 
+                            <img
+                                src={selectedProduct.currentVersionId?.image ? `${BASE_URL}/products/image-proxy?key=${encodeURIComponent(selectedProduct.currentVersionId.image)}` : fallbackImages[products.indexOf(selectedProduct) % fallbackImages.length]}
+                                alt={selectedProduct.name}
+                                className="w-full h-full object-cover"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
                             <div className="absolute bottom-4 left-6">

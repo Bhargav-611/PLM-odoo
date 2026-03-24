@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
 import axios from 'axios';
+import API from '../api/api';
 import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -14,7 +15,7 @@ const ForgotPassword = () => {
         setError('');
 
         try {
-            await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+            await API.post('/auth/forgot-password', { email });
             setMessage('OTP sent successfully!');
             setTimeout(() => {
                 navigate('/verify-otp', { state: { email } });
